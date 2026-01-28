@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import crypto from 'crypto';
 
 let db: Database.Database;
 
@@ -13,12 +14,20 @@ export function getDb(): Database.Database {
   return db;
 }
 
+function hashPassword(password: string): string {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
 function initializeDatabase() {
-  const query = db.prepare(`
+  const jobsQuery = db.prepare(`
     SELECT name FROM sqlite_master WHERE type='table' AND name='jobs'
   `);
   
-  if (!query.get()) {
+  const usersQuery = db.prepare(`
+    SELECT name FROM sqlite_master WHERE type='table' AND name='users'
+  `);
+  
+  if (!jobsQuery.get()) {
     db.exec(`
       CREATE TABLE jobs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,6 +51,19 @@ function initializeDatabase() {
         ('Coding Website Toko Online', 'Toko Digital', 'open', '10 hari lagi', 'Rp 5.000.000', 'Web Development', 'Develop toko online dengan fitur lengkap');
     `);
   }
+
+  if (!usersQuery.get()) {
+    db.exec(`
+      CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+  }
 }
 
 export interface Job {
@@ -53,6 +75,15 @@ export interface Job {
   reward: string;
   category: string;
   description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  password: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -130,4 +161,36 @@ export function deleteJob(id: number): void {
 export function applyForJob(jobId: number): void {
   const query = getDb().prepare('UPDATE jobs SET status = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?');
   query.run('in_progress', jobId);
+}
+
+// User functions
+export function createUser(username: string, email: string, password: string): User {
+  const hashedPassword = hashPassword(password);
+  const insert = getDb().prepare(
+    'INSERT INTO users (username, email, password) VALUES (?, ?, ?)'
+  );
+  
+  try {
+    const result = insert.run(username, email, hashedPassword);
+    return getUserById(result.lastInsertRowid as number)!;
+  } catch (error: any) {
+    if (error.message.includes('UNIQUE constraint failed')) {
+      throw new Error('Username or email already exists');
+    }
+    throw error;
+  }
+}
+
+export function getUserByUsername(username: string): User | undefined {
+  const query = getDb().prepare('SELECT * FROM users WHERE username = ?');
+  return query.get(username) as User | undefined;
+}
+
+export function getUserById(id: number): User | undefined {
+  const query = getDb().prepare('SELECT * FROM users WHERE id = ?');
+  return query.get(id) as User | undefined;
+}
+
+export function verifyPassword(password: string, hashedPassword: string): boolean {
+  return hashPassword(password) === hashedPassword;
 }
