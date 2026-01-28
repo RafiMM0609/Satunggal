@@ -22,7 +22,7 @@ RUN npm ci --only=production
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY lib lib/
-COPY data data/
+# COPY data data/
 COPY scripts scripts/
 COPY tsconfig.json tsconfig.json
 
