@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   LayoutGrid,
   Clock,
@@ -13,6 +13,7 @@ import {
   ArrowRight,
   Wallet,
 } from 'lucide-react';
+import Pekerjaan from './Pekerjaan';
 
 interface Job {
   id: number;
@@ -29,8 +30,10 @@ interface DashboardProps {
   onSubmitWork: (id: number) => void;
 }
 
-const NavItem = ({ icon, label, active = false }: { icon: React.ReactNode; label: string; active?: boolean }) => (
-  <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer transition-all duration-300 ${
+const NavItem = ({ icon, label, active = false, onClick }: { icon: React.ReactNode; label: string; active?: boolean; onClick?: () => void }) => (
+  <div 
+    onClick={onClick}
+    className={`flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer transition-all duration-300 ${
     active
       ? 'bg-blue-50 text-blue-600 font-bold'
       : 'text-slate-400 font-medium hover:text-slate-700 hover:bg-slate-50'
@@ -70,7 +73,7 @@ const StatCard = ({ label, count, theme, icon }: { label: string; count: string 
   );
 };
 
-const JobCard = ({ job, onSubmit }: { job: Job; onSubmit: () => void }) => (
+const JobCardComp = ({ job, onSubmit }: { job: Job; onSubmit: () => void }) => (
   <div className="bg-white p-5 rounded-3xl shadow-sm border border-blue-100/50 hover:shadow-md hover:border-blue-200 transition-all">
     <div className="flex justify-between items-start mb-3">
       <div className="flex-1">
@@ -106,7 +109,7 @@ const JobCard = ({ job, onSubmit }: { job: Job; onSubmit: () => void }) => (
   </div>
 );
 
-const WaitingCard = ({ job }: { job: Job }) => (
+const WaitingCardComp = ({ job }: { job: Job }) => (
   <div className="bg-[#FFFDF5] p-5 rounded-3xl border border-amber-100 shadow-sm relative overflow-hidden group">
     <div className="absolute -right-4 -top-4 w-20 h-20 bg-amber-100/50 rounded-full blur-2xl group-hover:bg-amber-200/50 transition-colors"></div>
 
@@ -134,8 +137,14 @@ const WaitingCard = ({ job }: { job: Job }) => (
 );
 
 export default function Dashboard({ jobs, onSubmitWork }: DashboardProps) {
+  const [currentPage, setCurrentPage] = useState('overview' as 'overview' | 'pekerjaan' | 'keuangan' | 'profil');
+
   const inProgressJobs = jobs.filter((j) => j.status === 'in_progress' || j.status === 'revision');
   const waitingJobs = jobs.filter((j) => j.status === 'pending_review');
+
+  if (currentPage === 'pekerjaan') {
+    return <Pekerjaan onNavigateBack={() => setCurrentPage('overview')} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#F0F5FA] font-sans text-slate-800">
@@ -149,8 +158,8 @@ export default function Dashboard({ jobs, onSubmitWork }: DashboardProps) {
         </div>
 
         <nav className="flex flex-col gap-2 w-full px-4">
-          <NavItem icon={<LayoutGrid size={20} />} label="Overview" active />
-          <NavItem icon={<Clock size={20} />} label="Pekerjaan" />
+          <NavItem icon={<LayoutGrid size={20} />} label="Overview" active={(currentPage as any) === 'overview'} onClick={() => setCurrentPage('overview' as const)} />
+          <NavItem icon={<Clock size={20} />} label="Pekerjaan" active={(currentPage as any) === 'pekerjaan'} onClick={() => setCurrentPage('pekerjaan' as const)} />
           <NavItem icon={<Wallet size={20} />} label="Keuangan" />
           <div className="mt-auto pt-8 border-t border-slate-100">
             <NavItem icon={<User size={20} />} label="Profil Saya" />
@@ -204,7 +213,7 @@ export default function Dashboard({ jobs, onSubmitWork }: DashboardProps) {
 
             <div className="space-y-4">
               {inProgressJobs.map((job) => (
-                <JobCard key={job.id} job={job} onSubmit={() => onSubmitWork(job.id)} />
+                <JobCardComp key={job.id} job={job} onSubmit={() => onSubmitWork(job.id)} />
               ))}
             </div>
           </section>
@@ -223,7 +232,7 @@ export default function Dashboard({ jobs, onSubmitWork }: DashboardProps) {
 
             <div className="space-y-4">
               {waitingJobs.length > 0 ? (
-                waitingJobs.map((job) => <WaitingCard key={job.id} job={job} />)
+                waitingJobs.map((job) => <WaitingCardComp key={job.id} job={job} />)
               ) : (
                 <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-3xl border-2 border-dashed border-amber-200 bg-amber-50/30">
                   <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-amber-300 mb-3 shadow-sm">

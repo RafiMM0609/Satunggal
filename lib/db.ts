@@ -24,19 +24,22 @@ function initializeDatabase() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         client TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'in_progress',
+        status TEXT NOT NULL DEFAULT 'open',
         deadline TEXT NOT NULL,
         reward TEXT NOT NULL,
         category TEXT NOT NULL,
+        description TEXT DEFAULT '',
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
       );
 
-      INSERT INTO jobs (title, client, status, deadline, reward, category) VALUES
-        ('Desain Maskot Brand Sereal', 'Sereal Jaya Makmur', 'in_progress', '2 hari lagi', 'Rp 2.500.000', 'Illustration'),
-        ('Revisi Landing Page UI/UX', 'Startup Kilat', 'revision', 'Besok', 'Rp 1.200.000', 'Web Design'),
-        ('Optimasi SEO Artikel Blog', 'Media Sehat', 'pending_review', 'Selesai', 'Rp 800.000', 'SEO'),
-        ('Video Animasi Promosi', 'EduKids', 'pending_review', 'Selesai', 'Rp 4.000.000', 'Motion Graphic');
+      INSERT INTO jobs (title, client, status, deadline, reward, category, description) VALUES
+        ('Desain Maskot Brand Sereal', 'Sereal Jaya Makmur', 'in_progress', '2 hari lagi', 'Rp 2.500.000', 'Illustration', 'Buat desain maskot yang unik dan menarik'),
+        ('Revisi Landing Page UI/UX', 'Startup Kilat', 'revision', 'Besok', 'Rp 1.200.000', 'Web Design', 'Revisi komponen UI berdasarkan feedback'),
+        ('Optimasi SEO Artikel Blog', 'Media Sehat', 'pending', 'Selesai', 'Rp 800.000', 'SEO', 'Optimasi 10 artikel dengan keyword lokal'),
+        ('Video Animasi Promosi', 'EduKids', 'pending', 'Selesai', 'Rp 4.000.000', 'Motion Graphic', 'Buat video animasi promosi produk'),
+        ('Desain Flyer Event', 'Event Organizer Pro', 'open', '5 hari lagi', 'Rp 500.000', 'Graphic Design', 'Desain flyer untuk event besar'),
+        ('Coding Website Toko Online', 'Toko Digital', 'open', '10 hari lagi', 'Rp 5.000.000', 'Web Development', 'Develop toko online dengan fitur lengkap');
     `);
   }
 }
@@ -45,10 +48,11 @@ export interface Job {
   id: number;
   title: string;
   client: string;
-  status: 'in_progress' | 'revision' | 'pending_review' | 'done';
+  status: 'open' | 'pending' | 'in_progress' | 'done' | 'revision' | 'pending_review';
   deadline: string;
   reward: string;
   category: string;
+  description?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -70,8 +74,60 @@ export function updateJobStatus(id: number, status: string): void {
 
 export function createJob(job: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>): Job {
   const insert = getDb().prepare(
-    'INSERT INTO jobs (title, client, status, deadline, reward, category) VALUES (?, ?, ?, ?, ?, ?)'
+    'INSERT INTO jobs (title, client, status, deadline, reward, category, description) VALUES (?, ?, ?, ?, ?, ?, ?)'
   );
-  const result = insert.run(job.title, job.client, job.status, job.deadline, job.reward, job.category);
+  const result = insert.run(job.title, job.client, job.status, job.deadline, job.reward, job.category, job.description || '');
   return getJobById(result.lastInsertRowid as number)!;
+}
+
+export function updateJob(id: number, job: Partial<Omit<Job, 'id' | 'createdAt' | 'updatedAt'>>): void {
+  const fields = [];
+  const values = [];
+  
+  if (job.title !== undefined) {
+    fields.push('title = ?');
+    values.push(job.title);
+  }
+  if (job.client !== undefined) {
+    fields.push('client = ?');
+    values.push(job.client);
+  }
+  if (job.status !== undefined) {
+    fields.push('status = ?');
+    values.push(job.status);
+  }
+  if (job.deadline !== undefined) {
+    fields.push('deadline = ?');
+    values.push(job.deadline);
+  }
+  if (job.reward !== undefined) {
+    fields.push('reward = ?');
+    values.push(job.reward);
+  }
+  if (job.category !== undefined) {
+    fields.push('category = ?');
+    values.push(job.category);
+  }
+  if (job.description !== undefined) {
+    fields.push('description = ?');
+    values.push(job.description);
+  }
+  
+  if (fields.length === 0) return;
+  
+  fields.push('updatedAt = CURRENT_TIMESTAMP');
+  values.push(id);
+  
+  const query = getDb().prepare(`UPDATE jobs SET ${fields.join(', ')} WHERE id = ?`);
+  query.run(...values);
+}
+
+export function deleteJob(id: number): void {
+  const query = getDb().prepare('DELETE FROM jobs WHERE id = ?');
+  query.run(id);
+}
+
+export function applyForJob(jobId: number): void {
+  const query = getDb().prepare('UPDATE jobs SET status = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?');
+  query.run('in_progress', jobId);
 }
