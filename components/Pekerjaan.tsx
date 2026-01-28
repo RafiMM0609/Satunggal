@@ -37,12 +37,20 @@ export default function Pekerjaan({ onNavigateBack }: PekerjaanProps) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('open');
+  const [user, setUser] = useState<any>(null);
 
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
 
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [addEditModalOpen, setAddEditModalOpen] = useState(false);
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
 
   useEffect(() => {
     fetchJobs();
@@ -134,13 +142,17 @@ export default function Pekerjaan({ onNavigateBack }: PekerjaanProps) {
         const res = await fetch('/api/jobs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(jobData),
+          body: JSON.stringify({ ...jobData, userId: user?.id, userRole: user?.role }),
         });
 
-        if (res.ok) {
-          const newJob = await res.json();
-          setJobs([newJob, ...jobs]);
+        if (!res.ok) {
+          const error = await res.json();
+          alert(error.error || 'Failed to create job');
+          return;
         }
+
+        const newJob = await res.json();
+        setJobs([newJob, ...jobs]);
       }
 
       setAddEditModalOpen(false);
@@ -226,7 +238,13 @@ export default function Pekerjaan({ onNavigateBack }: PekerjaanProps) {
 
           <button
             onClick={handleAddJob}
-            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 hover:-translate-y-0.5 transform duration-200"
+            disabled={user?.role === 'freelancer'}
+            className={`flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-semibold shadow-lg transform duration-200 ${
+              user?.role === 'freelancer'
+                ? 'bg-gray-400 text-white cursor-not-allowed opacity-50'
+                : 'bg-blue-600 text-white hover:bg-blue-700 hover:-translate-y-0.5'
+            } transition-colors`}
+            title={user?.role === 'freelancer' ? 'Freelancers cannot create projects' : ''}
           >
             <Plus size={18} strokeWidth={3} /> Tambah Pekerjaan
           </button>

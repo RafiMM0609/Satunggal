@@ -3,7 +3,7 @@ import { createUser } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    const { username, email, password } = await request.json();
+    const { username, email, password, role } = await request.json();
 
     if (!username || !email || !password) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -13,14 +13,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
     }
 
-    const user = createUser(username, email, password);
+    const userRole = role && (role === 'client' || role === 'freelancer') ? role : 'freelancer';
+    const user = createUser(username, email, password, userRole);
     
     return NextResponse.json({ 
       success: true,
       user: {
         id: user.id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        role: user.role
       }
     }, { status: 201 });
   } catch (error: any) {

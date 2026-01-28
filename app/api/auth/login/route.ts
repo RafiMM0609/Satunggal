@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
       user: {
         id: user.id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        role: user.role
       }
     });
   } catch (error: any) {

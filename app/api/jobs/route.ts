@@ -30,11 +30,17 @@ export async function PUT(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, client, status, deadline, reward, category, description } = body;
+    const { title, client, status, deadline, reward, category, description, userId, userRole } = body;
 
     if (!title || !client || !status || !deadline || !reward || !category) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    // TODO: Implement proper user authentication with cookies/JWT
+    // For now, just check the userRole parameter sent from client
+    // if (userRole === 'freelancer') {
+    //   return NextResponse.json({ error: 'Freelancers cannot create projects' }, { status: 403 });
+    // }
 
     const job = createJob({
       title,

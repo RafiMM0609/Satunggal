@@ -50,6 +50,14 @@ function initializeDatabase() {
         ('Desain Flyer Event', 'Event Organizer Pro', 'open', '5 hari lagi', 'Rp 500.000', 'Graphic Design', 'Desain flyer untuk event besar'),
         ('Coding Website Toko Online', 'Toko Digital', 'open', '10 hari lagi', 'Rp 5.000.000', 'Web Development', 'Develop toko online dengan fitur lengkap');
     `);
+  } else {
+    // Check if description column exists, if not add it
+    const columns = db.prepare('PRAGMA table_info(jobs)').all() as any[];
+    const hasDescription = columns.some(col => col.name === 'description');
+    
+    if (!hasDescription) {
+      db.exec(`ALTER TABLE jobs ADD COLUMN description TEXT DEFAULT '';`);
+    }
   }
 
   if (!usersQuery.get()) {
@@ -59,6 +67,7 @@ function initializeDatabase() {
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'freelancer',
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
       );
@@ -84,6 +93,7 @@ export interface User {
   username: string;
   email: string;
   password: string;
+  role: 'client' | 'freelancer';
   createdAt: string;
   updatedAt: string;
 }
@@ -164,14 +174,14 @@ export function applyForJob(jobId: number): void {
 }
 
 // User functions
-export function createUser(username: string, email: string, password: string): User {
+export function createUser(username: string, email: string, password: string, role: 'client' | 'freelancer' = 'freelancer'): User {
   const hashedPassword = hashPassword(password);
   const insert = getDb().prepare(
-    'INSERT INTO users (username, email, password) VALUES (?, ?, ?)'
+    'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)'
   );
   
   try {
-    const result = insert.run(username, email, hashedPassword);
+    const result = insert.run(username, email, hashedPassword, role);
     return getUserById(result.lastInsertRowid as number)!;
   } catch (error: any) {
     if (error.message.includes('UNIQUE constraint failed')) {

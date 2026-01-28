@@ -23,10 +23,13 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY lib lib/
 COPY data data/
+COPY scripts scripts/
+COPY tsconfig.json tsconfig.json
 
 EXPOSE 3030
 
 ENV PORT=3030
 ENV NODE_ENV=production
 
-CMD ["npm", "start"]
+# Run migrations before starting the app
+CMD ["sh", "-c", "npm run migrate && npm start"]

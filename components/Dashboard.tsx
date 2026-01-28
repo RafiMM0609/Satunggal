@@ -138,6 +138,14 @@ const WaitingCardComp = ({ job }: { job: Job }) => (
 
 export default function Dashboard({ jobs, onSubmitWork }: DashboardProps) {
   const [currentPage, setCurrentPage] = useState('overview' as 'overview' | 'pekerjaan' | 'keuangan' | 'profil');
+  const [user, setUser] = useState<any>(null);
+
+  React.useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
 
   const inProgressJobs = jobs.filter((j) => j.status === 'in_progress' || j.status === 'revision');
   const waitingJobs = jobs.filter((j) => j.status === 'pending_review');
@@ -185,9 +193,11 @@ export default function Dashboard({ jobs, onSubmitWork }: DashboardProps) {
             <button className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors shadow-sm">
               <Bell size={20} />
             </button>
-            <button className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 hover:-translate-y-0.5 transform duration-200">
-              <Plus size={18} strokeWidth={3} /> Project Baru
-            </button>
+            {user?.role === 'client' && (
+              <button className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 hover:-translate-y-0.5 transform duration-200">
+                <Plus size={18} strokeWidth={3} /> Project Baru
+              </button>
+            )}
           </div>
         </header>
 
