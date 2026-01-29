@@ -196,6 +196,11 @@ export function getUserByUsername(username: string): User | undefined {
   return query.get(username) as User | undefined;
 }
 
+export function getUserByEmail(email: string): User | undefined {
+  const query = getDb().prepare('SELECT * FROM users WHERE email = ?');
+  return query.get(email) as User | undefined;
+}
+
 export function getUserById(id: number): User | undefined {
   const query = getDb().prepare('SELECT * FROM users WHERE id = ?');
   return query.get(id) as User | undefined;
@@ -204,3 +209,4 @@ export function getUserById(id: number): User | undefined {
 export function verifyPassword(password: string, hashedPassword: string): boolean {
   return hashPassword(password) === hashedPassword;
 }
+

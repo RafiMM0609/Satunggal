@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Dashboard from '@/components/Dashboard';
 
 interface Job {
@@ -14,12 +15,21 @@ interface Job {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
+    // Check authentication
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      router.push('/login');
+      return;
+    }
+    setUser(JSON.parse(userData));
     fetchJobs();
-  }, []);
+  }, [router]);
 
   const fetchJobs = async () => {
     try {
@@ -49,6 +59,15 @@ export default function Home() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    router.push('/login');
+  };
+
+  if (!user) {
+    return null;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F0F5FA] flex items-center justify-center">
@@ -57,5 +76,5 @@ export default function Home() {
     );
   }
 
-  return <Dashboard jobs={jobs} onSubmitWork={handleSubmitWork} />;
+  return <Dashboard jobs={jobs} onSubmitWork={handleSubmitWork} user={user} onLogout={handleLogout} />;
 }

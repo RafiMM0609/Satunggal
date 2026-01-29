@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserByUsername, verifyPassword } from '@/lib/db';
+import { getUserByUsername, getUserByEmail, verifyPassword } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,19 +9,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const user = getUserByUsername(username);
+    // Try to find user by username or email
+    let user = getUserByUsername(username);
+    if (!user) {
+      user = getUserByEmail(username);
+    }
 
     if (!user) {
-      return NextResponse.json({ error: 'Username or password is incorrect' }, { status: 401 });
+      return NextResponse.json({ error: 'Username/email or password is incorrect' }, { status: 401 });
     }
 
     const isPasswordValid = verifyPassword(password, user.password);
 
     if (!isPasswordValid) {
-      return NextResponse.json({ error: 'Username or password is incorrect' }, { status: 401 });
+      return NextResponse.json({ error: 'Username/email or password is incorrect' }, { status: 401 });
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       user: {
         id: user.id,

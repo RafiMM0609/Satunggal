@@ -12,6 +12,7 @@ import {
   Plus,
   ArrowRight,
   Wallet,
+  LogOut,
 } from 'lucide-react';
 import Pekerjaan from './Pekerjaan';
 
@@ -28,6 +29,8 @@ interface Job {
 interface DashboardProps {
   jobs: Job[];
   onSubmitWork: (id: number) => void;
+  user: any;
+  onLogout: () => void;
 }
 
 const NavItem = ({ icon, label, active = false, onClick }: { icon: React.ReactNode; label: string; active?: boolean; onClick?: () => void }) => (
@@ -136,16 +139,8 @@ const WaitingCardComp = ({ job }: { job: Job }) => (
   </div>
 );
 
-export default function Dashboard({ jobs, onSubmitWork }: DashboardProps) {
+export default function Dashboard({ jobs, onSubmitWork, user, onLogout }: DashboardProps) {
   const [currentPage, setCurrentPage] = useState('overview' as 'overview' | 'pekerjaan' | 'keuangan' | 'profil');
-  const [user, setUser] = useState<any>(null);
-
-  React.useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, []);
 
   const inProgressJobs = jobs.filter((j) => j.status === 'in_progress' || j.status === 'revision');
   const waitingJobs = jobs.filter((j) => j.status === 'pending_review');
@@ -184,7 +179,7 @@ export default function Dashboard({ jobs, onSubmitWork }: DashboardProps) {
               <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Halo, Alex! 👋</h1>
+              <h1 className="text-2xl font-bold text-slate-800">Halo, {user?.username}! 👋</h1>
               <p className="text-slate-500 font-medium">Semangat berkarya hari ini.</p>
             </div>
           </div>
@@ -192,6 +187,13 @@ export default function Dashboard({ jobs, onSubmitWork }: DashboardProps) {
           <div className="flex items-center gap-3">
             <button className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors shadow-sm">
               <Bell size={20} />
+            </button>
+            <button 
+              onClick={onLogout}
+              className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors shadow-sm"
+              title="Logout"
+            >
+              <LogOut size={20} />
             </button>
             {user?.role === 'client' && (
               <button className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 hover:-translate-y-0.5 transform duration-200">

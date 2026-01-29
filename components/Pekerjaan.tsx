@@ -344,14 +344,24 @@ export default function Pekerjaan({ onNavigateBack }: PekerjaanProps) {
 
                   <button
                     onClick={() => handleEditJob(job)}
-                    className="py-2 px-3 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+                    disabled={user?.role === 'freelancer'}
+                    className={`py-2 px-3 rounded-xl transition-colors ${
+                      user?.role === 'freelancer'
+                        ? 'bg-slate-100 text-slate-400 opacity-50 cursor-not-allowed'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
                   >
                     <Edit2 size={16} />
                   </button>
 
                   <button
                     onClick={() => handleDeleteJob(job.id)}
-                    className="py-2 px-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                    disabled={user?.role === 'freelancer'}
+                    className={`py-2 px-3 rounded-xl transition-colors ${
+                      user?.role === 'freelancer'
+                        ? 'bg-red-50 text-red-400 opacity-50 cursor-not-allowed'
+                        : 'bg-red-50 text-red-600 hover:bg-red-100'
+                    }`}
                   >
                     <Trash2 size={16} />
                   </button>
