@@ -18,12 +18,13 @@ interface Job {
 
 interface AddEditJobModalProps {
   job: Job | null;
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
-  onSubmit: (job: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onSubmit?: (job: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onSave?: (job: Job) => void;
 }
 
-export default function AddEditJobModal({ job, isOpen, onClose, onSubmit }: AddEditJobModalProps) {
+export default function AddEditJobModal({ job, isOpen = true, onClose, onSubmit, onSave }: AddEditJobModalProps) {
   const [formData, setFormData] = useState({
     title: '',
     client: '',
@@ -79,7 +80,12 @@ export default function AddEditJobModal({ job, isOpen, onClose, onSubmit }: AddE
 
     if (!validateForm()) return;
 
-    onSubmit(formData);
+    if (onSave && job) {
+      onSave({ ...job, ...formData } as Job);
+    } else if (onSubmit) {
+      onSubmit(formData);
+    }
+    
     setFormData({
       title: '',
       client: '',

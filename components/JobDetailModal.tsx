@@ -18,12 +18,12 @@ interface Job {
 
 interface JobDetailModalProps {
   job: Job | null;
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
-  onApply: (jobId: number) => void;
+  onApply?: (jobId: number) => void;
 }
 
-export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDetailModalProps) {
+export default function JobDetailModal({ job, isOpen = true, onClose, onApply }: JobDetailModalProps) {
   if (!isOpen || !job) return null;
 
   const getStatusColor = (status: string) => {
@@ -126,7 +126,7 @@ export default function JobDetailModal({ job, isOpen, onClose, onApply }: JobDet
           )}
 
           {/* Action Button */}
-          {job.status === 'open' && (
+          {job.status === 'open' && onApply && (
             <button
               onClick={() => {
                 onApply(job.id);

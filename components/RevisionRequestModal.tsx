@@ -8,19 +8,30 @@ import {
   Send,
 } from 'lucide-react';
 
+interface Job {
+  id: number;
+  title: string;
+  client?: string;
+  freelancer?: string;
+  reward?: string;
+}
+
 interface RevisionRequestModalProps {
-  isOpen: boolean;
-  projectTitle: string;
+  isOpen?: boolean;
+  projectTitle?: string;
+  job?: Job;
   onClose: () => void;
   onSubmit: (notes: string) => void;
 }
 
 export default function RevisionRequestModal({
-  isOpen,
+  isOpen = true,
   projectTitle,
+  job,
   onClose,
   onSubmit,
 }: RevisionRequestModalProps) {
+  const title = projectTitle || job?.title || 'Project';
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -52,7 +63,7 @@ export default function RevisionRequestModal({
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-800">Ajukan Revisi</h2>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">{projectTitle}</p>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">{title}</p>
             </div>
           </div>
           <button
