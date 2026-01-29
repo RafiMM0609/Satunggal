@@ -30,13 +30,26 @@ if (!usersTableExists) {
       username TEXT NOT NULL UNIQUE,
       email TEXT NOT NULL UNIQUE,
       password TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'freelancer',
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
   console.log('✓ Users table created\n');
 } else {
-  console.log('✓ Users table already exists\n');
+  console.log('✓ Users table already exists');
+
+  // Check if role column exists, if not add it
+  const roleColumnExists = db.prepare(`
+    PRAGMA table_info(users);
+  `).all().some((col: any) => col.name === 'role');
+
+  if (!roleColumnExists) {
+    console.log('  Adding missing role column...');
+    db.exec(`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'freelancer';`);
+    console.log('  ✓ Role column added');
+  }
+  console.log();
 }
 
 // Create jobs table if it doesn't exist
