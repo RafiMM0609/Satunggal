@@ -3,17 +3,17 @@ import { getUserByUsername, getUserByEmail, verifyPassword } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    const { username, password } = await request.json();
+    const { email, password } = await request.json();
 
-    if (!username || !password) {
+    if (!email || !password) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Try to find user by username or email
-    let user = getUserByUsername(username);
-    if (!user) {
-      user = getUserByEmail(username);
-    }
+    // // Try to find user by username or email
+    // let user = getUserByUsername(email);
+    // if (!user) {
+      // }
+    let user = getUserByEmail(email);
 
     if (!user) {
       return NextResponse.json({ error: 'Username/email or password is incorrect' }, { status: 401 });
