@@ -13,8 +13,10 @@ import {
   ArrowRight,
   Wallet,
   LogOut,
+  FileCheck,
 } from 'lucide-react';
 import Pekerjaan from './Pekerjaan';
+import Review from './Review';
 
 interface Job {
   id: number;
@@ -140,13 +142,17 @@ const WaitingCardComp = ({ job }: { job: Job }) => (
 );
 
 export default function Dashboard({ jobs, onSubmitWork, user, onLogout }: DashboardProps) {
-  const [currentPage, setCurrentPage] = useState('overview' as 'overview' | 'pekerjaan' | 'keuangan' | 'profil');
+  const [currentPage, setCurrentPage] = useState('overview' as 'overview' | 'pekerjaan' | 'review' | 'keuangan' | 'profil');
 
   const inProgressJobs = jobs.filter((j) => j.status === 'in_progress' || j.status === 'revision');
   const waitingJobs = jobs.filter((j) => j.status === 'pending_review');
 
   if (currentPage === 'pekerjaan') {
     return <Pekerjaan onNavigateBack={() => setCurrentPage('overview')} />;
+  }
+
+  if (currentPage === 'review') {
+    return <Review onNavigateBack={() => setCurrentPage('overview')} />;
   }
 
   return (
@@ -162,7 +168,12 @@ export default function Dashboard({ jobs, onSubmitWork, user, onLogout }: Dashbo
 
         <nav className="flex flex-col gap-2 w-full px-4">
           <NavItem icon={<LayoutGrid size={20} />} label="Overview" active={(currentPage as any) === 'overview'} onClick={() => setCurrentPage('overview' as const)} />
-          <NavItem icon={<Clock size={20} />} label="Pekerjaan" active={(currentPage as any) === 'pekerjaan'} onClick={() => setCurrentPage('pekerjaan' as const)} />
+          {user?.role === 'freelancer' && (
+            <NavItem icon={<Clock size={20} />} label="Pekerjaan" active={(currentPage as any) === 'pekerjaan'} onClick={() => setCurrentPage('pekerjaan' as const)} />
+          )}
+          {user?.role === 'client' && (
+            <NavItem icon={<FileCheck size={20} />} label="Review" active={(currentPage as any) === 'review'} onClick={() => setCurrentPage('review' as const)} />
+          )}
           <NavItem icon={<Wallet size={20} />} label="Keuangan" />
           <div className="mt-auto pt-8 border-t border-slate-100">
             <NavItem icon={<User size={20} />} label="Profil Saya" />
