@@ -19,7 +19,7 @@ interface Job {
   id: number;
   title: string;
   client: string;
-  status: 'open' | 'pending' | 'in_progress' | 'done' | 'revision' | 'pending_review';
+  status: 'open' | 'pending' | 'in_progress' | 'done' | 'revision' | 'pending_review' | 'approved' | 'ready_payment' | 'paid';
   deadline: string;
   reward: string;
   category: string;
@@ -167,6 +167,14 @@ export default function Pekerjaan({ onNavigateBack }: PekerjaanProps) {
         return 'bg-emerald-100 text-emerald-700';
       case 'revision':
         return 'bg-red-100 text-red-700';
+      case 'pending_review':
+        return 'bg-orange-100 text-orange-700';
+      case 'approved':
+        return 'bg-purple-100 text-purple-700';
+      case 'ready_payment':
+        return 'bg-amber-100 text-amber-700';
+      case 'paid':
+        return 'bg-emerald-100 text-emerald-700';
       default:
         return 'bg-slate-100 text-slate-700';
     }
@@ -186,6 +194,12 @@ export default function Pekerjaan({ onNavigateBack }: PekerjaanProps) {
         return 'Revisi';
       case 'pending_review':
         return 'Menunggu Review';
+      case 'approved':
+        return 'Disetujui';
+      case 'ready_payment':
+        return 'Siap Dibayar';
+      case 'paid':
+        return 'Sudah Dibayar';
       default:
         return status;
     }

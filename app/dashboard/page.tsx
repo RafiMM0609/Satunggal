@@ -128,6 +128,12 @@ export default function OverviewPage() {
 
   const handleSubmitWork = async (jobId: number) => {
     try {
+      const job = jobs.find(j => j.id === jobId);
+      if (!job || job.status !== 'in_progress') {
+        alert('Pekerjaan harus dalam status "Sedang Dikerjakan" untuk dikirim');
+        return;
+      }
+      
       const res = await fetch('/api/jobs', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },

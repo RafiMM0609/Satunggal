@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllJobs, updateJobStatus, createJob, updateJob, deleteJob } from '@/lib/db';
+import { getAllJobs, updateJobStatus, createJob, updateJob, deleteJob, getJobById } from '@/lib/db';
 
 export async function GET() {
   try {
@@ -17,6 +17,16 @@ export async function PUT(request: NextRequest) {
 
     if (!jobId || !status) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Validate status transitions - prevent submitting results if not in_progress
+    if (status === 'pending_review') {
+      const currentJob = getJobById(jobId);
+      if (!currentJob || currentJob.status !== 'in_progress') {
+        return NextResponse.json({ 
+          error: 'Cannot submit results: job must be in progress' 
+        }, { status: 400 });
+      }
     }
 
     updateJobStatus(jobId, status);

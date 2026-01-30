@@ -16,7 +16,7 @@ interface Project {
   id: number;
   title: string;
   client: string;
-  status: 'ready_payment' | 'paid';
+  status: 'approved' | 'ready_payment' | 'paid';
   deadline: string;
   reward: string;
   category: string;
@@ -68,7 +68,7 @@ export default function PembayaranPage() {
       const res = await fetch('/api/projects');
       const data = await res.json();
       setProjects(
-        data.filter((p: Project) => p.status === 'ready_payment' || p.status === 'paid')
+        data.filter((p: Project) => p.status === 'approved' || p.status === 'ready_payment' || p.status === 'paid')
       );
     } catch (error) {
       console.error('Failed to fetch projects:', error);
@@ -92,7 +92,7 @@ export default function PembayaranPage() {
     let filtered = projects;
 
     if (activeTab === 'ready') {
-      filtered = filtered.filter(p => p.status === 'ready_payment');
+      filtered = filtered.filter(p => p.status === 'approved' || p.status === 'ready_payment');
     } else {
       filtered = filtered.filter(p => p.status === 'paid');
     }
@@ -176,10 +176,10 @@ export default function PembayaranPage() {
     }
   };
 
-  const readyCount = projects.filter(p => p.status === 'ready_payment').length;
+  const readyCount = projects.filter(p => p.status === 'approved' || p.status === 'ready_payment').length;
   const paidCount = projects.filter(p => p.status === 'paid').length;
   const totalPending = projects
-    .filter(p => p.status === 'ready_payment')
+    .filter(p => p.status === 'approved' || p.status === 'ready_payment')
     .reduce((sum, p) => {
       const match = p.reward.match(/\d+/);
       return sum + (match ? parseInt(match[0]) : 0);

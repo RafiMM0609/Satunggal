@@ -43,14 +43,14 @@ export default function ReviewPage() {
 
   const handleApprove = async (jobId: number) => {
     try {
-      const res = await fetch('/api/jobs', {
+      const res = await fetch('/api/jobs/[id]'.replace('[id]', jobId.toString()), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobId, status: 'approved' }),
+        body: JSON.stringify({ status: 'ready_payment' }),
       });
 
       if (res.ok) {
-        setJobs(jobs.map(j => j.id === jobId ? { ...j, status: 'approved' } : j));
+        setJobs(jobs.map(j => j.id === jobId ? { ...j, status: 'approved' as any } : j));
       }
     } catch (error) {
       console.error('Failed to approve job:', error);

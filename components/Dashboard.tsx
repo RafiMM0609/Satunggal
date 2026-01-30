@@ -23,7 +23,7 @@ interface Job {
   id: number;
   title: string;
   client: string;
-  status: 'in_progress' | 'revision' | 'pending_review' | 'done' | 'open' | 'pending';
+  status: 'in_progress' | 'revision' | 'pending_review' | 'done' | 'open' | 'pending' | 'approved' | 'ready_payment' | 'paid';
   deadline: string;
   reward: string;
   category: string;

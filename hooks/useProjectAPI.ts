@@ -2,7 +2,7 @@ interface Job {
   id: number;
   title: string;
   client: string;
-  status: 'open' | 'pending' | 'in_progress' | 'done' | 'revision' | 'pending_review';
+  status: 'open' | 'pending' | 'in_progress' | 'done' | 'revision' | 'pending_review' | 'approved' | 'ready_payment' | 'paid';
   deadline: string;
   reward: string;
   category: string;
