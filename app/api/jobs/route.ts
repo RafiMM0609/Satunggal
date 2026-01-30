@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllJobs, updateJobStatus, createJob, updateJob, deleteJob, applyForJob } from '@/lib/db';
+import { getAllJobs, updateJobStatus, createJob, updateJob, deleteJob } from '@/lib/db';
 
 export async function GET() {
   try {
@@ -35,12 +35,6 @@ export async function POST(request: NextRequest) {
     if (!title || !client || !status || !deadline || !reward || !category) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-
-    // TODO: Implement proper user authentication with cookies/JWT
-    // For now, just check the userRole parameter sent from client
-    // if (userRole === 'freelancer') {
-    //   return NextResponse.json({ error: 'Freelancers cannot create projects' }, { status: 403 });
-    // }
 
     const job = createJob({
       title,

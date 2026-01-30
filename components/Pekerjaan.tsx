@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import JobDetailModal from './JobDetailModal';
 import AddEditJobModal from './AddEditJobModal';
+import { useProjectAPI } from '@/hooks/useProjectAPI';
 
 interface Job {
   id: number;
@@ -23,6 +24,7 @@ interface Job {
   reward: string;
   category: string;
   description?: string;
+  freelancerId?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -45,6 +47,8 @@ export default function Pekerjaan({ onNavigateBack }: PekerjaanProps) {
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [addEditModalOpen, setAddEditModalOpen] = useState(false);
 
+  const { fetchAllJobs, takeProject, createProject, updateJob, deleteJob } = useProjectAPI();
+
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
@@ -63,8 +67,7 @@ export default function Pekerjaan({ onNavigateBack }: PekerjaanProps) {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/jobs');
-      const data = await res.json();
+      const data = await fetchAllJobs();
       setJobs(data);
     } catch (error) {
       console.error('Failed to fetch jobs:', error);
@@ -98,20 +101,19 @@ export default function Pekerjaan({ onNavigateBack }: PekerjaanProps) {
     setDetailModalOpen(true);
   };
 
-  const handleApplyJob = async (jobId: number) => {
-    try {
-      const res = await fetch(`/api/jobs/${jobId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'apply' }),
-      });
+  const handleTakeProject = async (jobId: number) => {
+    if (!user?.id) {
+      alert('User information not found. Please login again.');
+      return;
+    }
 
-      if (res.ok) {
-        const updatedJob = await res.json();
-        setJobs(jobs.map((j) => (j.id === jobId ? updatedJob : j)));
-      }
+    try {
+      const updatedJob = await takeProject(jobId, user.id);
+      setJobs(jobs.map((j) => (j.id === jobId ? updatedJob : j)));
+      alert('Project taken successfully!');
     } catch (error) {
-      console.error('Failed to apply for job:', error);
+      console.error('Failed to take project:', error);
+      throw error;
     }
   };
 
@@ -128,30 +130,10 @@ export default function Pekerjaan({ onNavigateBack }: PekerjaanProps) {
   const handleSubmitJob = async (jobData: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
       if (editingJob) {
-        const res = await fetch(`/api/jobs/${editingJob.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(jobData),
-        });
-
-        if (res.ok) {
-          const updatedJob = await res.json();
-          setJobs(jobs.map((j) => (j.id === editingJob.id ? updatedJob : j)));
-        }
+        const updatedJob = await updateJob(editingJob.id, jobData);
+        setJobs(jobs.map((j) => (j.id === editingJob.id ? updatedJob : j)));
       } else {
-        const res = await fetch('/api/jobs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...jobData, userId: user?.id, userRole: user?.role }),
-        });
-
-        if (!res.ok) {
-          const error = await res.json();
-          alert(error.error || 'Failed to create job');
-          return;
-        }
-
-        const newJob = await res.json();
+        const newJob = await createProject(jobData, user?.id, user?.role);
         setJobs([newJob, ...jobs]);
       }
 
@@ -166,13 +148,8 @@ export default function Pekerjaan({ onNavigateBack }: PekerjaanProps) {
     if (!confirm('Apakah Anda yakin ingin menghapus pekerjaan ini?')) return;
 
     try {
-      const res = await fetch(`/api/jobs/${jobId}`, {
-        method: 'DELETE',
-      });
-
-      if (res.ok) {
-        setJobs(jobs.filter((j) => j.id !== jobId));
-      }
+      await deleteJob(jobId);
+      setJobs(jobs.filter((j) => j.id !== jobId));
     } catch (error) {
       console.error('Failed to delete job:', error);
     }
@@ -377,7 +354,7 @@ export default function Pekerjaan({ onNavigateBack }: PekerjaanProps) {
         job={selectedJob}
         isOpen={detailModalOpen}
         onClose={() => setDetailModalOpen(false)}
-        onApply={handleApplyJob}
+        onTakeProject={user?.role === 'freelancer' ? handleTakeProject : undefined}
       />
 
       <AddEditJobModal

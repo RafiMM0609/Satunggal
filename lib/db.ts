@@ -38,6 +38,7 @@ function initializeDatabase() {
         reward TEXT NOT NULL,
         category TEXT NOT NULL,
         description TEXT DEFAULT '',
+        freelancerId INTEGER,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
       );
@@ -51,12 +52,16 @@ function initializeDatabase() {
         ('Coding Website Toko Online', 'Toko Digital', 'open', '10 hari lagi', 'Rp 5.000.000', 'Web Development', 'Develop toko online dengan fitur lengkap');
     `);
   } else {
-    // Check if description column exists, if not add it
     const columns = db.prepare('PRAGMA table_info(jobs)').all() as any[];
     const hasDescription = columns.some(col => col.name === 'description');
+    const hasFreelancerId = columns.some(col => col.name === 'freelancerId');
     
     if (!hasDescription) {
       db.exec(`ALTER TABLE jobs ADD COLUMN description TEXT DEFAULT '';`);
+    }
+    
+    if (!hasFreelancerId) {
+      db.exec(`ALTER TABLE jobs ADD COLUMN freelancerId INTEGER;`);
     }
   }
 
@@ -84,6 +89,7 @@ export interface Job {
   reward: string;
   category: string;
   description?: string;
+  freelancerId?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -168,9 +174,9 @@ export function deleteJob(id: number): void {
   query.run(id);
 }
 
-export function applyForJob(jobId: number): void {
-  const query = getDb().prepare('UPDATE jobs SET status = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?');
-  query.run('in_progress', jobId);
+export function takeProject(jobId: number, freelancerId: number): void {
+  const query = getDb().prepare('UPDATE jobs SET status = ?, freelancerId = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND status = ?');
+  query.run('in_progress', freelancerId, jobId, 'open');
 }
 
 // User functions

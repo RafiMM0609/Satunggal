@@ -82,6 +82,7 @@ if (!jobsTableExists) {
       reward TEXT NOT NULL,
       category TEXT NOT NULL,
       description TEXT DEFAULT '',
+      freelancerId INTEGER,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -107,6 +108,17 @@ if (!jobsTableExists) {
     console.log('  Adding missing description column...');
     db.exec(`ALTER TABLE jobs ADD COLUMN description TEXT DEFAULT '';`);
     console.log('  ✓ Description column added');
+  }
+  
+  // Check if freelancerId column exists, if not add it
+  const freelancerIdColumnExists = db.prepare(`
+    PRAGMA table_info(jobs);
+  `).all().some((col: any) => col.name === 'freelancerId');
+  
+  if (!freelancerIdColumnExists) {
+    console.log('  Adding missing freelancerId column...');
+    db.exec(`ALTER TABLE jobs ADD COLUMN freelancerId INTEGER;`);
+    console.log('  ✓ FreelancerId column added');
   }
   console.log();
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { X, Briefcase, MapPin, Calendar, DollarSign } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Briefcase, Calendar, DollarSign } from 'lucide-react';
 
 interface Job {
   id: number;
@@ -12,6 +12,7 @@ interface Job {
   reward: string;
   category: string;
   description?: string;
+  freelancerId?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -20,10 +21,13 @@ interface JobDetailModalProps {
   job: Job | null;
   isOpen?: boolean;
   onClose: () => void;
-  onApply?: (jobId: number) => void;
+  onTakeProject?: (jobId: number) => Promise<void>;
 }
 
-export default function JobDetailModal({ job, isOpen = true, onClose, onApply }: JobDetailModalProps) {
+export default function JobDetailModal({ job, isOpen = true, onClose, onTakeProject }: JobDetailModalProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   if (!isOpen || !job) return null;
 
   const getStatusColor = (status: string) => {
@@ -59,6 +63,21 @@ export default function JobDetailModal({ job, isOpen = true, onClose, onApply }:
         return 'Menunggu Review';
       default:
         return status;
+    }
+  };
+
+  const handleTakeProject = async () => {
+    if (!onTakeProject) return;
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      await onTakeProject(job.id);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to take project');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -125,22 +144,31 @@ export default function JobDetailModal({ job, isOpen = true, onClose, onApply }:
             </div>
           )}
 
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 p-4 rounded-2xl text-red-700 text-sm font-medium">
+              {error}
+            </div>
+          )}
+
           {/* Action Button */}
-          {job.status === 'open' && onApply && (
+          {job.status === 'open' && onTakeProject && (
             <button
-              onClick={() => {
-                onApply(job.id);
-                onClose();
-              }}
-              className="w-full bg-blue-600 text-white font-bold py-3 rounded-2xl hover:bg-blue-700 transition-colors"
+              onClick={handleTakeProject}
+              disabled={isLoading}
+              className={`w-full font-bold py-3 rounded-2xl transition-colors ${
+                isLoading
+                  ? 'bg-slate-400 text-white cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
             >
-              Ajukan Penawaran
+              {isLoading ? 'Mengambil Project...' : 'Ambil Project'}
             </button>
           )}
 
           {job.status !== 'open' && (
             <div className="bg-slate-100 p-4 rounded-2xl text-center text-slate-600 font-medium">
-              Pekerjaan ini tidak tersedia untuk diajukan
+              Pekerjaan ini tidak tersedia untuk diambil
             </div>
           )}
         </div>

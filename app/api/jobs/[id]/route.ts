@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getJobById, updateJob, deleteJob, applyForJob } from '@/lib/db';
+import { getJobById, updateJob, deleteJob, takeProject } from '@/lib/db';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -46,17 +46,31 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const { action } = await request.json();
+    const { action, freelancerId } = await request.json();
+    const jobId = parseInt(id);
 
-    if (action === 'apply') {
-      applyForJob(parseInt(id));
-      const job = getJobById(parseInt(id));
-      return NextResponse.json(job);
+    if (action === 'take') {
+      if (!freelancerId) {
+        return NextResponse.json({ error: 'Freelancer ID is required' }, { status: 400 });
+      }
+      
+      const job = getJobById(jobId);
+      if (!job) {
+        return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+      }
+      
+      if (job.status !== 'open') {
+        return NextResponse.json({ error: 'Project must have open status to be taken' }, { status: 400 });
+      }
+      
+      takeProject(jobId, freelancerId);
+      const updatedJob = getJobById(jobId);
+      return NextResponse.json(updatedJob);
     }
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
   } catch (error) {
-    console.error('Error applying for job:', error);
-    return NextResponse.json({ error: 'Failed to apply for job' }, { status: 500 });
+    console.error('Error processing job action:', error);
+    return NextResponse.json({ error: 'Failed to process action' }, { status: 500 });
   }
 }
