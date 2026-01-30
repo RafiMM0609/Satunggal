@@ -17,15 +17,19 @@ import {
 } from 'lucide-react';
 import Pekerjaan from './Pekerjaan';
 import Review from './Review';
+import AddEditJobModal from './AddEditJobModal';
 
 interface Job {
   id: number;
   title: string;
   client: string;
-  status: 'in_progress' | 'revision' | 'pending_review' | 'done';
+  status: 'in_progress' | 'revision' | 'pending_review' | 'done' | 'open' | 'pending';
   deadline: string;
   reward: string;
   category: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface DashboardProps {
@@ -143,9 +147,32 @@ const WaitingCardComp = ({ job }: { job: Job }) => (
 
 export default function Dashboard({ jobs, onSubmitWork, user, onLogout }: DashboardProps) {
   const [currentPage, setCurrentPage] = useState('overview' as 'overview' | 'pekerjaan' | 'review' | 'keuangan' | 'profil');
+  const [projectModalOpen, setProjectModalOpen] = useState(false);
 
   const inProgressJobs = jobs.filter((j) => j.status === 'in_progress' || j.status === 'revision');
   const waitingJobs = jobs.filter((j) => j.status === 'pending_review');
+
+  const handleSubmitProject = async (projectData: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const res = await fetch('/api/jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...projectData, userId: user?.id, userRole: user?.role }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        alert(error.error || 'Failed to create project');
+        return;
+      }
+
+      setProjectModalOpen(false);
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to create project:', error);
+      alert('Gagal membuat project');
+    }
+  };
 
   if (currentPage === 'pekerjaan') {
     return <Pekerjaan onNavigateBack={() => setCurrentPage('overview')} />;
@@ -207,7 +234,9 @@ export default function Dashboard({ jobs, onSubmitWork, user, onLogout }: Dashbo
               <LogOut size={20} />
             </button>
             {user?.role === 'client' && (
-              <button className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 hover:-translate-y-0.5 transform duration-200">
+              <button 
+                onClick={() => setProjectModalOpen(true)}
+                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 hover:-translate-y-0.5 transform duration-200">
                 <Plus size={18} strokeWidth={3} /> Project Baru
               </button>
             )}
@@ -269,6 +298,14 @@ export default function Dashboard({ jobs, onSubmitWork, user, onLogout }: Dashbo
           </section>
         </div>
       </main>
+
+      <AddEditJobModal
+        job={null}
+        isOpen={projectModalOpen}
+        onClose={() => setProjectModalOpen(false)}
+        onSubmit={handleSubmitProject}
+        isProject={true}
+      />
     </div>
   );
 }

@@ -8,12 +8,25 @@ import fs from 'fs';
 const dbDir = path.join(process.cwd(), 'data');
 const dbPath = path.join(dbDir, 'app.db');
 
-// Create data directory if it doesn't exist
+// Create data directory if it doesn't exist with proper permissions
 if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+  fs.mkdirSync(dbDir, { recursive: true, mode: 0o777 });
 }
 
+// Ensure directory has write permissions
+try {
+  fs.accessSync(dbDir, fs.constants.W_OK);
+} catch (err) {
+  fs.chmodSync(dbDir, 0o777);
+}
+
+// Open database with settings optimized for WAL mode
 const db = new Database(dbPath);
+
+// Enable WAL mode and pragmas for better reliability
+db.pragma('journal_mode = WAL');
+db.pragma('synchronous = NORMAL');
+db.pragma('foreign_keys = ON');
 
 console.log('Running database migrations...\n');
 
@@ -96,6 +109,35 @@ if (!jobsTableExists) {
     console.log('  ✓ Description column added');
   }
   console.log();
+}
+
+// Create payments table if it doesn't exist
+const paymentsTableExists = db.prepare(`
+  SELECT name FROM sqlite_master WHERE type='table' AND name='payments'
+`).get();
+
+if (!paymentsTableExists) {
+  console.log('Creating payments table...');
+  db.exec(`
+    CREATE TABLE payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      projectId INTEGER NOT NULL,
+      clientId INTEGER NOT NULL,
+      freelancerId INTEGER NOT NULL,
+      amount TEXT NOT NULL,
+      walletAddress TEXT,
+      status TEXT NOT NULL DEFAULT 'completed',
+      paymentMethod TEXT DEFAULT 'wallet',
+      transactionHash TEXT,
+      notes TEXT DEFAULT '',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(projectId) REFERENCES jobs(id)
+    );
+  `);
+  console.log('✓ Payments table created\n');
+} else {
+  console.log('✓ Payments table already exists\n');
 }
 
 console.log('Database migrations completed successfully!');

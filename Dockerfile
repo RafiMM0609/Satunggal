@@ -26,6 +26,9 @@ COPY lib lib/
 COPY scripts scripts/
 COPY tsconfig.json tsconfig.json
 
+# Create data directory with proper permissions
+RUN mkdir -p /app/data && chmod 777 /app/data
+
 EXPOSE 3030
 
 ENV PORT=3030

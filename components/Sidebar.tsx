@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Briefcase, LayoutGrid, Clock, FileCheck, Wallet, User, LogOut, Bell } from 'lucide-react';
+import { Briefcase, LayoutGrid, Clock, FileCheck, Wallet, User, LogOut, Bell, CreditCard } from 'lucide-react';
 
 interface SidebarProps {
   user: any;
@@ -73,12 +73,26 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
           />
         )}
         {user?.role === 'client' && (
-          <NavItem 
-            href="/dashboard/review" 
-            icon={<FileCheck size={20} />} 
-            label="Review" 
-            active={pathname === '/dashboard/review'}
-          />
+          <>
+            <NavItem 
+              href="/dashboard/projects" 
+              icon={<Briefcase size={20} />} 
+              label="Projects" 
+              active={pathname === '/dashboard/projects'}
+            />
+            <NavItem 
+              href="/dashboard/review" 
+              icon={<FileCheck size={20} />} 
+              label="Review" 
+              active={pathname === '/dashboard/review'}
+            />
+            <NavItem 
+              href="/dashboard/pembayaran" 
+              icon={<CreditCard size={20} />} 
+              label="Pembayaran" 
+              active={pathname === '/dashboard/pembayaran'}
+            />
+          </>
         )}
         <NavItem 
           href="/dashboard/keuangan" 

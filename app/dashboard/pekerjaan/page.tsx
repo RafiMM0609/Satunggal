@@ -18,7 +18,7 @@ interface Job {
   id: number;
   title: string;
   client: string;
-  status: string;
+  status: 'open' | 'pending' | 'in_progress' | 'done' | 'revision' | 'pending_review';
   deadline: string;
   reward: string;
   category: string;
@@ -98,21 +98,61 @@ export default function PekerjaanPage() {
     if (!confirm('Yakin ingin menghapus pekerjaan ini?')) return;
 
     try {
-      await fetch(`/api/jobs/${jobId}`, { method: 'DELETE' });
+      const endpoint = user?.role === 'client' ? `/api/projects/${jobId}` : `/api/jobs/${jobId}`;
+      await fetch(endpoint, { method: 'DELETE' });
       setJobs(jobs.filter((j) => j.id !== jobId));
     } catch (error) {
       console.error('Failed to delete job:', error);
     }
   };
 
-  const handleSaveJob = (updatedJob: Job) => {
-    if (editingJob) {
-      setJobs(jobs.map((j) => (j.id === updatedJob.id ? updatedJob : j)));
-    } else {
-      setJobs([...jobs, updatedJob]);
+  const handleCreateJob = async (jobData: any) => {
+    try {
+      const endpoint = user?.role === 'client' ? '/api/projects' : '/api/jobs';
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...jobData, userId: user?.id, userRole: user?.role }),
+      });
+
+      if (res.ok) {
+        const newJob = await res.json();
+        setJobs([newJob, ...jobs]);
+        setAddEditModalOpen(false);
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to create job');
+      }
+    } catch (error) {
+      console.error('Failed to create job:', error);
+      alert('Gagal membuat pekerjaan');
     }
-    setAddEditModalOpen(false);
-    setEditingJob(null);
+  };
+
+  const handleSaveJob = async (updatedJobData: any) => {
+    if (editingJob) {
+      try {
+        const endpoint = user?.role === 'client' ? `/api/projects/${editingJob.id}` : `/api/jobs/${editingJob.id}`;
+        const res = await fetch(endpoint, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedJobData),
+        });
+
+        if (res.ok) {
+          const updatedJob = await res.json();
+          setJobs(jobs.map((j) => (j.id === editingJob.id ? updatedJob : j)));
+          setAddEditModalOpen(false);
+          setEditingJob(null);
+        } else {
+          const error = await res.json();
+          alert(error.error || 'Failed to update job');
+        }
+      } catch (error) {
+        console.error('Failed to save job:', error);
+        alert('Gagal menyimpan pekerjaan');
+      }
+    }
   };
 
   if (loading) {
@@ -261,7 +301,8 @@ export default function PekerjaanPage() {
             setAddEditModalOpen(false);
             setEditingJob(null);
           }}
-          onSave={handleSaveJob}
+          onSubmit={editingJob ? undefined : handleCreateJob}
+          onSave={editingJob ? handleSaveJob : undefined}
         />
       )}
     </div>

@@ -7,7 +7,7 @@ interface Job {
   id: number;
   title: string;
   client: string;
-  status: string;
+  status: 'open' | 'pending' | 'in_progress' | 'done' | 'revision' | 'pending_review';
   deadline: string;
   reward: string;
   category: string;
@@ -21,10 +21,11 @@ interface AddEditJobModalProps {
   isOpen?: boolean;
   onClose: () => void;
   onSubmit?: (job: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  onSave?: (job: Job) => void;
+  onSave?: (job: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  isProject?: boolean;
 }
 
-export default function AddEditJobModal({ job, isOpen = true, onClose, onSubmit, onSave }: AddEditJobModalProps) {
+export default function AddEditJobModal({ job, isOpen = true, onClose, onSubmit, onSave, isProject = false }: AddEditJobModalProps) {
   const [formData, setFormData] = useState({
     title: '',
     client: '',
@@ -81,7 +82,7 @@ export default function AddEditJobModal({ job, isOpen = true, onClose, onSubmit,
     if (!validateForm()) return;
 
     if (onSave && job) {
-      onSave({ ...job, ...formData } as Job);
+      onSave(formData);
     } else if (onSubmit) {
       onSubmit(formData);
     }
@@ -120,7 +121,7 @@ export default function AddEditJobModal({ job, isOpen = true, onClose, onSubmit,
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-slate-800">
-            {job ? 'Edit Pekerjaan' : 'Tambah Pekerjaan Baru'}
+            {job ? (isProject ? 'Edit Project' : 'Edit Pekerjaan') : (isProject ? 'Buat Project Baru' : 'Tambah Pekerjaan Baru')}
           </h2>
           <button
             onClick={onClose}
@@ -134,13 +135,13 @@ export default function AddEditJobModal({ job, isOpen = true, onClose, onSubmit,
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Title */}
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Judul Pekerjaan *</label>
+            <label className="block text-sm font-bold text-slate-700 mb-2">{isProject ? 'Nama Project' : 'Judul Pekerjaan'} *</label>
             <input
               type="text"
               name="title"
               value={formData.title}
               onChange={handleChange}
-              placeholder="Masukkan judul pekerjaan"
+              placeholder={isProject ? 'Masukkan nama project' : 'Masukkan judul pekerjaan'}
               className={`w-full px-4 py-3 rounded-2xl border-2 font-medium focus:outline-none transition-colors ${
                 errors.title
                   ? 'border-red-400 bg-red-50 text-red-700'
@@ -264,7 +265,7 @@ export default function AddEditJobModal({ job, isOpen = true, onClose, onSubmit,
               type="submit"
               className="flex-1 px-6 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors"
             >
-              {job ? 'Simpan Perubahan' : 'Tambah Pekerjaan'}
+              {job ? (isProject ? 'Simpan Perubahan Project' : 'Simpan Perubahan') : (isProject ? 'Buat Project' : 'Tambah Pekerjaan')}
             </button>
           </div>
         </form>

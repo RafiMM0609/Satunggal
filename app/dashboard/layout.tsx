@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bell, LogOut, Plus } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
+import AddEditJobModal from '@/components/AddEditJobModal';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [projectModalOpen, setProjectModalOpen] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -27,6 +29,28 @@ export default function DashboardLayout({ children }: LayoutProps) {
   const handleLogout = () => {
     localStorage.removeItem('user');
     router.push('/login');
+  };
+
+  const handleSubmitProject = async (projectData: any) => {
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...projectData, userId: user?.id, userRole: user?.role }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        alert(error.error || 'Failed to create project');
+        return;
+      }
+
+      setProjectModalOpen(false);
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to create project:', error);
+      alert('Gagal membuat project');
+    }
   };
 
   if (loading || !user) {
@@ -67,7 +91,9 @@ export default function DashboardLayout({ children }: LayoutProps) {
               <LogOut size={20} />
             </button>
             {user?.role === 'client' && (
-              <button className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 hover:-translate-y-0.5 transform duration-200">
+              <button 
+                onClick={() => setProjectModalOpen(true)}
+                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 hover:-translate-y-0.5 transform duration-200">
                 <Plus size={18} strokeWidth={3} /> Project Baru
               </button>
             )}
@@ -76,6 +102,14 @@ export default function DashboardLayout({ children }: LayoutProps) {
 
         {children}
       </main>
+
+      <AddEditJobModal
+        job={null}
+        isOpen={projectModalOpen}
+        onClose={() => setProjectModalOpen(false)}
+        onSubmit={handleSubmitProject}
+        isProject={true}
+      />
     </div>
   );
 }
