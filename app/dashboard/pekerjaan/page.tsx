@@ -11,21 +11,9 @@ import {
   DollarSign,
   AlertCircle,
 } from 'lucide-react';
+import type { Job } from '@/lib/db';
 import JobDetailModal from '@/components/JobDetailModal';
 import AddEditJobModal from '@/components/AddEditJobModal';
-
-interface Job {
-  id: number;
-  title: string;
-  client: string;
-  status: 'open' | 'pending' | 'in_progress' | 'done' | 'revision' | 'pending_review';
-  deadline: string;
-  reward: string;
-  category: string;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export default function PekerjaanPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -152,6 +140,29 @@ export default function PekerjaanPage() {
         console.error('Failed to save job:', error);
         alert('Gagal menyimpan pekerjaan');
       }
+    }
+  };
+
+  const handleTakeProject = async (jobId: number) => {
+    try {
+      const res = await fetch(`/api/jobs/${jobId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'take', freelancerId: user?.id }),
+      });
+
+      if (res.ok) {
+        const updatedJob = await res.json();
+        setJobs(jobs.map((j) => (j.id === jobId ? updatedJob : j)));
+        setDetailModalOpen(false);
+        alert('Project berhasil diambil!');
+      } else {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to take project');
+      }
+    } catch (error) {
+      console.error('Failed to take project:', error);
+      throw error;
     }
   };
 
@@ -291,6 +302,7 @@ export default function PekerjaanPage() {
         <JobDetailModal
           job={selectedJob}
           onClose={() => setDetailModalOpen(false)}
+          onTakeProject={user?.role === 'freelancer' ? handleTakeProject : undefined}
         />
       )}
 

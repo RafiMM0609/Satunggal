@@ -84,7 +84,7 @@ export interface Job {
   id: number;
   title: string;
   client: string;
-  status: 'open' | 'pending' | 'in_progress' | 'done' | 'revision' | 'pending_review' | 'approved' | 'ready_payment' | 'paid';
+  status: 'open' | 'pending' | 'in_progress' | 'done' | 'revision' | 'pending_review' | 'approved' | 'ready_payment' | 'paid' | 'revision_requested';
   deadline: string;
   reward: string;
   category: string;
@@ -175,8 +175,8 @@ export function deleteJob(id: number): void {
 }
 
 export function takeProject(jobId: number, freelancerId: number): void {
-  const query = getDb().prepare('UPDATE jobs SET status = ?, freelancerId = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND status = ?');
-  query.run('in_progress', freelancerId, jobId, 'open');
+  const query = getDb().prepare('UPDATE jobs SET status = ?, freelancerId = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND (status = ? OR status = ?)');
+  query.run('in_progress', freelancerId, jobId, 'open', 'revision_requested');
 }
 
 // User functions

@@ -1,16 +1,4 @@
-interface Job {
-  id: number;
-  title: string;
-  client: string;
-  status: 'open' | 'pending' | 'in_progress' | 'done' | 'revision' | 'pending_review' | 'approved' | 'ready_payment' | 'paid';
-  deadline: string;
-  reward: string;
-  category: string;
-  description?: string;
-  freelancerId?: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Job } from '@/lib/db';
 
 export function useProjectAPI() {
   const fetchAllJobs = async (): Promise<Job[]> => {

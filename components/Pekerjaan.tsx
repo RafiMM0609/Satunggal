@@ -15,19 +15,7 @@ import JobDetailModal from './JobDetailModal';
 import AddEditJobModal from './AddEditJobModal';
 import { useProjectAPI } from '@/hooks/useProjectAPI';
 
-interface Job {
-  id: number;
-  title: string;
-  client: string;
-  status: 'open' | 'pending' | 'in_progress' | 'done' | 'revision' | 'pending_review' | 'approved' | 'ready_payment' | 'paid';
-  deadline: string;
-  reward: string;
-  category: string;
-  description?: string;
-  freelancerId?: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Job } from '@/lib/db';
 
 interface PekerjaanProps {
   onNavigateBack?: () => void;

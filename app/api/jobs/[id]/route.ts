@@ -59,8 +59,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         return NextResponse.json({ error: 'Job not found' }, { status: 404 });
       }
       
-      if (job.status !== 'open') {
-        return NextResponse.json({ error: 'Project must have open status to be taken' }, { status: 400 });
+      const takeable = job.status === 'open' || job.status === 'revision_requested';
+      if (!takeable) {
+        return NextResponse.json({ error: 'Project must have open or revision_requested status to be taken' }, { status: 400 });
       }
       
       takeProject(jobId, freelancerId);

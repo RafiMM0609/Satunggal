@@ -2,20 +2,7 @@
 
 import React, { useState } from 'react';
 import { X, Briefcase, Calendar, DollarSign } from 'lucide-react';
-
-interface Job {
-  id: number;
-  title: string;
-  client: string;
-  status: string;
-  deadline: string;
-  reward: string;
-  category: string;
-  description?: string;
-  freelancerId?: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Job } from '@/lib/db';
 
 interface JobDetailModalProps {
   job: Job | null;
@@ -166,7 +153,7 @@ export default function JobDetailModal({ job, isOpen = true, onClose, onTakeProj
           )}
 
           {/* Action Button */}
-          {job.status === 'open' && onTakeProject && (
+          {(job.status === 'open' || job.status === 'revision_requested') && onTakeProject && (
             <button
               onClick={handleTakeProject}
               disabled={isLoading}
@@ -180,7 +167,7 @@ export default function JobDetailModal({ job, isOpen = true, onClose, onTakeProj
             </button>
           )}
 
-          {job.status !== 'open' && (
+          {job.status !== 'open' && job.status !== 'revision_requested' && (
             <div className="bg-slate-100 p-4 rounded-2xl text-center text-slate-600 font-medium">
               Pekerjaan ini tidak tersedia untuk diambil
             </div>
